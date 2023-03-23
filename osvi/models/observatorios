@@ -1,0 +1,57 @@
+from django.db import models
+# Create your models here.
+from datetime import datetime
+from django_currentuser.middleware import get_current_authenticated_user
+
+class Observatorio(models.Model):
+    tipo_inmueble  = models.CharField(max_length=200) #Tipologia
+    ubicacion = models.CharField(max_length=200)
+    localidad = models.CharField(max_length=200)
+    dptopartida= models.CharField(max_length=9)
+   
+    #relevamiento
+    fuente_informacion = models.CharField(max_length=250)
+    tipo_de_valor
+    oferta_publicada
+    valor_total 
+    valor_por_M2
+    moneda
+    fecha_relevamiento  = models.DateField()
+
+    superficie_Lote = models.DateField()
+    unidad_lote= models.DateField()
+    situacion_juridica #escritura boleto derechos posesorios*
+    frente
+    forma
+    ubicacion #Cuadra o esquina
+    tipo_de_barrio #abierto cerrado country
+
+    #Servicios
+    luz = models.BooleanField()
+    agua= models.BooleanField()
+    gas_natural = models.BooleanField()
+    cloacas= models.BooleanField()
+    pavimento = models.BooleanField()
+    cordon_cuneta = models.BooleanField()
+    observaciones = models.CharField(max_length=250)
+    #Fecha de Carga o modif
+    creator = models.CharField(max_length=250)
+    date_created = models.DateTimeField() 
+    modifier = models.CharField(max_length=250)
+    date_modified = models.DateTimeField()
+
+ def save(self):
+    if self.date_created == None:
+       self.date_created = datetime.now()
+       self.creator = get_current_authenticated_user()
+    self.date_modified = datetime.now()
+    self.modifier = get_current_authenticated_user()
+    super(Model, self).save()
+
+class Choice(models.Model):
+    poll = models.ForeignKey(Poll)
+    choice_text = models.CharField(max_length=200)
+    votes = models.IntegerField(default=0)
+
+    class Meta:
+        app_label = 'polls'
