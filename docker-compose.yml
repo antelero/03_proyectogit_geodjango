@@ -1,0 +1,39 @@
+version: "3.9"
+
+services:
+  
+  web:
+    container_name: web
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    env_file: 
+         - .env
+    ports:
+      - "8000:8000"
+    environment:
+      - POSTGRES_USER=gisuser
+      - POSTGRES_PASS=password
+      - POSTGRES_DB=gis
+    network_mode: host
+    #networks: host
+  
+
+  db:
+    container_name: db
+    image: kartoza/postgis:12.0
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    env_file:
+         - .env
+    environment:    
+      - POSTGRES_USER=gisuser
+      - POSTGRES_PASS=password
+      - POSTGRES_DB=gis
+    ports:
+      - "5432:5432"
+    network_mode: bridge
+    #networks: host
+
+#networks: host
