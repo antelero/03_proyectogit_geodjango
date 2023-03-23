@@ -5,3 +5,5 @@ https://django-shop.readthedocs.io/en/latest/reference/customer-model.html
 https://github.com/daniel10027/learning
 
 https://github.com/daniel10027/D-veloppeur-d-application---Python
+
+https://hevodata.com/learn/docker-postgresql/
