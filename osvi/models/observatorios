@@ -1,51 +1,101 @@
 from django.db import models
 # Create your models here.
+from django.contrib.gis.db import models
 from datetime import datetime
 from django_currentuser.middleware import get_current_authenticated_user
+from accounts.models import Account
+
+
+TIPOS_INMUEBLES = (
+    ('CASA', 'CASA'),
+    ('DEPARTAMENTO', 'NEEDS ANALYSIS'),
+    ('COCHERA', 'VALUE PROPOSITION'),
+    ('DEPOSITO/GALPON', 'DEPOSITO/GALPON'),
+    ('CAMPO', 'CAMPO'),
+    ('OTRO', 'OTRO'),    
+)
+
+TIPOS_VALORES  = (
+    ('CASA', 'CASA'),
+    ('DEPARTAMENTO', 'NEEDS ANALYSIS'),
+    ('COCHERA', 'VALUE PROPOSITION'),
+    ('DEPOSITO/GALPON', 'DEPOSITO/GALPON'),
+    ('CAMPO', 'CAMPO'),
+    ('OTRO', 'OTRO'),    
+)
+
 
 class Observatorio(models.Model):
-    tipo_inmueble  = models.CharField(max_length=200) #Tipologia
+    #Tipologia
+    tipo_inmueble = models.CharField( max_length=64, tipos_inmuebles=TIPOS_INMUEBLES)
     ubicacion = models.CharField(max_length=200)
     localidad = models.CharField(max_length=200)
     dptopartida= models.CharField(max_length=9)
    
     #relevamiento
     fuente_informacion = models.CharField(max_length=250)
-    tipo_de_valor
-    oferta_publicada
-    valor_total 
-    valor_por_M2
-    moneda
+    tipo_de_valor = models.CharField( max_length=64, tipos_valores=TIPOS_VALORES)
+    acto_juridico #(para muestras procedentes de Notarios y Tasaciones).
+    oferta_publicada = models.CharField(max_length=250)
+    valor_total  = models.CharField(max_length=250)
+    valor_por_m2 = models.CharField(max_length=250)
+    moneda = models.ForeignKey(Account, related_name='opportunities', on_delete=models.CASCADE, blank=True, null=True)
+     
     fecha_relevamiento  = models.DateField()
 
     superficie_Lote = models.DateField()
-    unidad_lote= models.DateField()
+    unidad_lote = models.DateField()
     situacion_juridica #escritura boleto derechos posesorios*
-    frente
-    forma
-    ubicacion #Cuadra o esquina
+    frente = models.CharField(max_length=250)
+    forma = models.CharField(max_length=250)
+    ubicacion = models.CharField(max_length=250)  #Cuadra o esquina
     tipo_de_barrio #abierto cerrado country
 
     #Servicios
-    luz = models.BooleanField()
-    agua= models.BooleanField()
-    gas_natural = models.BooleanField()
-    cloacas= models.BooleanField()
-    pavimento = models.BooleanField()
-    cordon_cuneta = models.BooleanField()
+    luz = models.BooleanField(default=False)
+    agua= models.BooleanField(default=False)
+    gas_natural = models.BooleanField(default=False)
+    cloacas= models.BooleanField(default=False)
+    pavimento = models.BooleanField(default=False)
+    cordon_cuneta = models.BooleanField(default=False)
+    
     observaciones = models.CharField(max_length=250)
+    Por fuente:
+        l Notarios y Registradores cuando la información causa cambio de titularidad
+    catastral
+        l Notarios y Registradores cuando la información no causa cambio de titularidad catastral (Bote)
+        l Importes consignados en escrituras
+        procedentes de las declaraciones 901N y
+        recursos
+        l Tasaciones
+        l Oferta
+    - Por información de mercado:
+        l Fecha de muestra
+        l Valores de mercado
+        l Acto jurídico (para muestras procedentes de Notarios y Tasaciones)
+
+    geom = models.PointField()
+
     #Fecha de Carga o modif
     creator = models.CharField(max_length=250)
     date_created = models.DateTimeField() 
     modifier = models.CharField(max_length=250)
     date_modified = models.DateTimeField()
-
+    
+    class Meta:
+        app_label = 'observatorios'
+        
+    def __str__(self):
+        return self.name
+        
+        
  def save(self):
     if self.date_created == None:
        self.date_created = datetime.now()
        self.creator = get_current_authenticated_user()
-    self.date_modified = datetime.now()
-    self.modifier = get_current_authenticated_user()
+    else:
+        self.date_modified = datetime.now()
+        self.modifier = get_current_authenticated_user()
     super(Model, self).save()
 
 class Choice(models.Model):
