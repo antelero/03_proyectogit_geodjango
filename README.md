@@ -121,6 +121,7 @@ services:
 ```
 
 `docker-compose_pg.yml`
+```
 services:
   db:
     container_name: db
@@ -136,7 +137,7 @@ services:
     ports:
       - "5432:5432"
     #psql -h 192.168.1.7 -p 5432 -d gis -U gisuser --password
-
+```
 
 ## Paso Tres - Crear Proyecto Django
 
@@ -159,9 +160,9 @@ docker compose run web python manage.py runserver 0.0.0.0:8000
 1 - Start docker and run services
 
 2 - Start code an exect
-
+```
 docker exec -it 00_inicio_geodjango_web_run_992f94b62c2e bash
-
+```
 **_Para el sistema_**
 Se detiene el sistema de ser necesario para continuar con las configuraciones.
 ```
@@ -223,15 +224,21 @@ Es rápido, una vez aprendes a hacerlo te sirve para crear cualquier proyecto co
 
 
 --Ejecuta bash en un contenedor en este caso "db"
+```
 docker exec -it db bash
+```
 
 --Muestra los conteenedores
+```
 docker ps -a
-
+```
+```
 docker compose run web 
-
+```
+```
 docker-compose -f docker-compose.yml build --remove-orphans
-
+```
+```
 docker compose run --publish 8000:8000 web bash --remove-orphans
-
+```
 
