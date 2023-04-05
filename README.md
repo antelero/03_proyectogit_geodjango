@@ -9,14 +9,12 @@ https://github.com/daniel10027/D-veloppeur-d-application---Python
 https://hevodata.com/learn/docker-postgresql/
 
 
-# Django - Docker
+# GeoDjango - Docker
 # ====================
 
-Pasos para iniciar un proyecto con Django utilizando Docker dentro del flujo de trabajo. Se utiliza `projectname` para hacer referencia al nombre del projecto.
+Pasos para iniciar un proyecto con geoDjango utilizando Docker dentro del flujo de trabajo. Se utiliza `projectname` para hacer referencia al nombre del projecto.
 
-### Pre requisito
-
-* Tener instalado **Docker**. 
+Refeencia de: https://github.com/mmorejon/docker-django
 
 ## Paso Uno - Establecer Estructura.
 
@@ -24,7 +22,7 @@ Pasos para iniciar un proyecto con Django utilizando Docker dentro del flujo de 
 
 Por ejemplo: Se descarga el proyecto que contiene la estructura general.
 ```
-git clone https://github.com/mmorejon/docker-django.git projectname
+git clone https://github.com/antelero/03_proyectogit_geodjango projectname
 ```
 
 **_Eliminar carpeta de Git_**
@@ -48,7 +46,37 @@ git init
 
 **_Crear Imagen en Docker_**
 
-Se crea la imagen de Docker para el projecto. La imagen va a contener la instalación de los requerimientos establecidos en el fichero `requirements.txt`.
+Se crea la imagen de Docker (DockerFile) para el projecto.
+```
+# syntax=docker/dockerfile:1
+FROM python:3
+#FROM ubuntu:jammy
+
+ENV LANG C.UTF-8
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+RUN apt-get update -qq && apt-get install -y -qq \
+    # std libs
+    git less nano curl \
+    ca-certificates \
+    wget build-essential\    
+    # geodjango
+    gdal-bin binutils libproj-dev libgdal-dev \
+    # postgresql
+    libpq-dev postgresql-client && \
+    apt-get clean all && rm -rf /var/apt/lists/* && rm -rf /var/cache/apt/*
+
+WORKDIR /code
+COPY requirements.txt /code/
+RUN pip install --upgrade pip
+RUN pip install -r requirements.txt
+COPY . /code/
+
+ENTRYPOINT /bin/bash
+```
+
+ La imagen va a contener la instalación de los requerimientos establecidos en el fichero `requirements.txt`.
 
 El fichero `requirements.txt` contiene los requisitos básicos para el inicio y despliegue de una aplicación con Django, si necesita adicionarle nuevos elementos este es un buen momento.
 
@@ -66,6 +94,50 @@ En el fichero `docker-compose.yml` se modifica el nombre de la imagen que será 
 image: projectname:1.0
 ```
 
+En este proyecto se generan dos ficheros docker-compose: 
+  `docker-compose.yml`    -> Utilizado para el servicio de python.
+  `docker-compose_pg.yml` -> Utilizado para el servicio de Postgres/Postgis.
+
+`docker-compose.yml`
+```
+services:
+  web:
+    image: projectname:1.0
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000    
+    volumes:
+    - .:/code   
+    environment:
+      - POSTGRES_USER=gisuser
+      - POSTGRES_PASS=password
+      - POSTGRES_DB=gis
+    ports:
+    # - "127.0.0.1:6060:6060/udp"
+      - target: 8000
+        host_ip: 127.0.0.1
+        published: 8000
+        protocol: tcp
+        mode: host
+```
+
+`docker-compose_pg.yml`
+services:
+  db:
+    container_name: db
+    image: kartoza/postgis:12.0
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    #env_file:
+    #     - .env
+    environment:    
+      - POSTGRES_USER=gisuser
+      - POSTGRES_PASS=password
+      - POSTGRES_DB=gis
+    ports:
+      - "5432:5432"
+    #psql -h 192.168.1.7 -p 5432 -d gis -U gisuser --password
+
+
 ## Paso Tres - Crear Proyecto Django
 
 **_Crear Proyecto_**
@@ -79,6 +151,16 @@ Para probar si el sistema está funcionando correctamente se ejectua el siguient
 ```
 docker-compose up
 ```
+
+**_Run container and next folow next explanation_**
+docker compose run web python manage.py runserver 0.0.0.0:8000
+
+
+1 - Start docker and run services
+
+2 - Start code an exect
+
+docker exec -it 00_inicio_geodjango_web_run_992f94b62c2e bash
 
 **_Para el sistema_**
 Se detiene el sistema de ser necesario para continuar con las configuraciones.
@@ -153,14 +235,3 @@ docker-compose -f docker-compose.yml build --remove-orphans
 docker compose run --publish 8000:8000 web bash --remove-orphans
 
 
-
-
-Run container and next folow next explanation
-docker compose run web python manage.py runserver 0.0.0.0:8000
-
-
-1 - Start docker and run services
-
-2 - Start code an exect
-
-docker exec -it 00_inicio_geodjango_web_run_992f94b62c2e bash
