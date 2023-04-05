@@ -1,0 +1,15 @@
+services:
+  db:
+    container_name: db
+    image: kartoza/postgis:12.0
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    #env_file:
+    #     - .env
+    environment:    
+      - POSTGRES_USER=gisuser
+      - POSTGRES_PASS=password
+      - POSTGRES_DB=gis
+    ports:
+      - "5432:5432"
+    #psql -h 192.168.1.7 -p 5432 -d gis -U gisuser --password

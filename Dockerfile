@@ -1,40 +1,26 @@
-FROM python:3.10-slim-buster
+# syntax=docker/dockerfile:1
+FROM python:3
+#FROM ubuntu:jammy
 
-# set our working directory inside the container (when it's finally created from this image)
-# depending on your environment you may need to
-# RUN mkdir -p /app
-WORKDIR /app
+ENV LANG C.UTF-8
 
-# depending on your environment you may also need to
-RUN mkdir -p /postgres_data
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+RUN apt-get update -qq && apt-get install -y -qq \
+    # std libs
+    git less nano curl \
+    ca-certificates \
+    wget build-essential\    
+    # geodjango
+    gdal-bin binutils libproj-dev libgdal-dev \
+    # postgresql
+    libpq-dev postgresql-client && \
+    apt-get clean all && rm -rf /var/apt/lists/* && rm -rf /var/cache/apt/*
 
-# set environment variables
-# Prevents Python from writing .pyc files to disc
-ENV PYTHONDONTWRITEBYTECODE 1
-
-# Prevents Python from buffering stdout and stderr
-ENV PYTHONUNBUFFERED 1
-
-# install psycopg2 dependencies
-RUN apt-get update \
-   && apt-get -y install netcat gcc postgresql \
-   && apt-get clean
-
-# Setup GDAL
-RUN apt-get update &&\
-   apt-get install -y binutils libproj-dev gdal-bin python-gdal python3-gdal 
-
-# upgrade pip version
+WORKDIR /code
+COPY requirements.txt /code/
 RUN pip install --upgrade pip
-
-# copy requirements to the image
-COPY ./requirements.txt /app/requirements.txt
-
 RUN pip install -r requirements.txt
+COPY . /code/
 
-# Copy over the project
-COPY . /app
-
-
-
-CMD ["/bin/bash"]
+ENTRYPOINT /bin/bash
